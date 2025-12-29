@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sound Solutions - Mac Apps & Plugins</title>
+    <title>Sound Solutions - Mac Apps & Audio Plugins</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,177 +14,640 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #050507;
+            --bg-secondary: #0c0c10;
+            --bg-card: #111118;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #0a0a0a;
-            color: #e5e5e5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 60%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+            animation: gradientMove 20s ease-in-out infinite;
+        }
+
+        @keyframes gradientMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+
+        /* Grid pattern overlay */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 60px 24px;
+            padding: 0 24px;
         }
 
-        header {
+        /* Navigation */
+        nav {
+            padding: 24px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0 120px;
             text-align: center;
-            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: #a78bfa;
+            margin-bottom: 32px;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #a78bfa;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 12px;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
         }
 
-        .tagline {
-            font-size: 1.1rem;
-            color: #888;
+        h1 span {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .apps {
-            display: grid;
-            gap: 32px;
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
         }
 
-        .app-card {
-            background: #161616;
-            border: 1px solid #262626;
-            border-radius: 16px;
-            padding: 32px;
-            display: grid;
-            grid-template-columns: 80px 1fr auto;
-            gap: 24px;
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
             align-items: center;
-            transition: border-color 0.2s;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            box-shadow: 0 4px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Apps Section */
+        .apps-section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-blue);
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* App Card */
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         }
 
         .app-card:hover {
-            border-color: #404040;
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
         }
 
-        .app-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        .app-card-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .app-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .app-icon-large {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
         }
 
-        .app-info h2 {
-            font-size: 1.5rem;
-            color: #fff;
+        .app-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
             margin-bottom: 8px;
         }
 
-        .app-info p {
-            color: #888;
-            font-size: 0.95rem;
+        .app-tagline {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .app-description {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.8;
+        }
+
+        .app-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .feature-tag {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .app-pricing {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .price-period {
+            color: var(--text-muted);
         }
 
         .app-actions {
             display: flex;
-            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* App Preview */
+        .app-preview {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-preview-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+            filter: blur(40px);
+        }
+
+        .app-preview-window {
+            position: relative;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+        }
+
+        .window-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .window-dot.red { background: #ff5f56; }
+        .window-dot.yellow { background: #ffbd2e; }
+        .window-dot.green { background: #27ca40; }
+
+        .window-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-align: center;
-            transition: all 0.2s;
+        .window-tile {
+            aspect-ratio: 16/10;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            transition: all 0.3s;
         }
 
-        .btn-primary {
-            background: #fff;
-            color: #000;
+        .window-tile:nth-child(1) {
+            grid-column: span 2;
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
         }
 
-        .btn-primary:hover {
-            background: #e5e5e5;
+        .window-tile:nth-child(4) {
+            grid-column: span 3;
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.2);
         }
 
-        .btn-secondary {
-            background: transparent;
-            color: #888;
-            border: 1px solid #333;
+        .app-card:hover .window-tile {
+            transform: scale(1.02);
         }
 
-        .btn-secondary:hover {
-            border-color: #555;
-            color: #fff;
-        }
-
+        /* Footer */
         footer {
-            text-align: center;
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
             margin-top: 80px;
-            padding-top: 32px;
-            border-top: 1px solid #262626;
-            color: #555;
-            font-size: 0.85rem;
         }
 
-        @media (max-width: 640px) {
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 0 80px;
+            }
+
             .app-card {
+                padding: 32px;
+            }
+
+            .app-card-inner {
                 grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .app-preview {
+                order: -1;
+            }
+
+            .footer-content {
+                flex-direction: column;
                 text-align: center;
-            }
-
-            .app-icon {
-                margin: 0 auto;
-            }
-
-            .app-actions {
-                flex-direction: row;
-                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Sound Solutions</h1>
-            <p class="tagline">Mac Apps & Audio Plugins</p>
-        </header>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
 
-        <section class="apps">
-            <article class="app-card">
-                <div class="app-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-                        <rect x="3" y="3" width="7" height="7" rx="1"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
                     </svg>
                 </div>
-                <div class="app-info">
-                    <h2>ReSized</h2>
-                    <p>Effortless window management for macOS. Define custom layouts and snap windows into place with keyboard shortcuts.</p>
-                </div>
-                <div class="app-actions">
-                    <a href="https://resized.lemonsqueezy.com/buy/748344" class="btn btn-primary">Buy Now</a>
-                    <!-- <a href="#" class="btn btn-secondary">Learn More</a> -->
-                </div>
-            </article>
+                <span class="logo-text">Sound Solutions</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#apps">Apps</a></li>
+                <li><a href="mailto:contact@soundsolutions.dev">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
 
-            <!-- Add more apps here -->
-
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-badge">Now Available</div>
+                <h1>Tools that <span>amplify</span><br>your workflow</h1>
+                <p class="hero-description">
+                    We build focused, powerful apps for macOS that help creators and professionals work smarter.
+                </p>
+                <div class="hero-cta">
+                    <a href="#apps" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Browse Apps
+                    </a>
+                    <a href="mailto:contact@soundsolutions.dev" class="btn btn-secondary">Get in Touch</a>
+                </div>
+            </div>
         </section>
 
-        <footer>
-            <p>&copy; 2025 Sound Solutions. All rights reserved.</p>
-        </footer>
-    </div>
+        <section id="apps" class="apps-section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-label">Our Apps</p>
+                    <h2>Built for macOS</h2>
+                    <p class="section-description">Native apps designed with care, built for performance.</p>
+                </div>
+
+                <article class="app-card">
+                    <div class="app-card-inner">
+                        <div class="app-content">
+                            <div class="app-icon-large">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+                                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                                </svg>
+                            </div>
+                            <h3 class="app-name">ReSized</h3>
+                            <p class="app-tagline">Window management, perfected.</p>
+                            <p class="app-description">
+                                Define custom window layouts for each monitor and snap windows into place with keyboard shortcuts. Work across multiple displays with effortless precision.
+                            </p>
+                            <div class="app-features">
+                                <span class="feature-tag">Multi-Monitor</span>
+                                <span class="feature-tag">Custom Layouts</span>
+                                <span class="feature-tag">Keyboard Shortcuts</span>
+                                <span class="feature-tag">Workspace Presets</span>
+                            </div>
+                            <div class="app-pricing">
+                                <span class="price">$9</span>
+                                <span class="price-period">one-time purchase</span>
+                            </div>
+                            <div class="app-actions">
+                                <a href="https://resized.lemonsqueezy.com/buy/748344" class="btn btn-primary">
+                                    Buy Now
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                <a href="#" class="btn btn-secondary">7-Day Free Trial</a>
+                            </div>
+                        </div>
+                        <div class="app-preview">
+                            <div class="app-preview-glow"></div>
+                            <div class="app-preview-window">
+                                <div class="window-header">
+                                    <div class="window-dot red"></div>
+                                    <div class="window-dot yellow"></div>
+                                    <div class="window-dot green"></div>
+                                </div>
+                                <div class="window-content">
+                                    <div class="window-tile"></div>
+                                    <div class="window-tile"></div>
+                                    <div class="window-tile"></div>
+                                    <div class="window-tile"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">&copy; 2025 Sound Solutions. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="mailto:contact@soundsolutions.dev">Contact</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
