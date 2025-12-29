@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Solutions - Mac Apps & Plugins</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        .apps {
+            display: grid;
+            gap: 32px;
+        }
+
+        .app-card {
+            background: #161616;
+            border: 1px solid #262626;
+            border-radius: 16px;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 24px;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+
+        .app-card:hover {
+            border-color: #404040;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .app-info h2 {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .app-info p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .app-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+        }
+
+        .btn-secondary:hover {
+            border-color: #555;
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding-top: 32px;
+            border-top: 1px solid #262626;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .app-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .app-icon {
+                margin: 0 auto;
+            }
+
+            .app-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sound Solutions</h1>
+            <p class="tagline">Mac Apps & Audio Plugins</p>
+        </header>
+
+        <section class="apps">
+            <article class="app-card">
+                <div class="app-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                </div>
+                <div class="app-info">
+                    <h2>ReSized</h2>
+                    <p>Effortless window management for macOS. Define custom layouts and snap windows into place with keyboard shortcuts.</p>
+                </div>
+                <div class="app-actions">
+                    <a href="https://resized.lemonsqueezy.com/buy/748344" class="btn btn-primary">Buy Now</a>
+                    <!-- <a href="#" class="btn btn-secondary">Learn More</a> -->
+                </div>
+            </article>
+
+            <!-- Add more apps here -->
+
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Sound Solutions. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
