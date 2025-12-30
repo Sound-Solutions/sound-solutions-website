@@ -532,45 +532,31 @@
     <nav>
         <div class="container">
             <a href="#" class="logo">
-                <div class="logo-icon" style="background: transparent; padding: 0; width: 44px; height: 44px; border-radius: 50%;">
-                    <svg width="44" height="44" viewBox="0 0 100 108" fill="none">
-                        <!-- Pin shape with gradient -->
+                <div class="logo-icon" style="background: var(--bg-secondary); border: 1px solid var(--border);">
+                    <svg width="28" height="28" viewBox="0 0 100 60" fill="none">
                         <defs>
-                            <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <linearGradient id="ssGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stop-color="#3b82f6"/>
-                                <stop offset="50%" stop-color="#8b5cf6"/>
+                                <stop offset="50%" stop-color="#22d3ee"/>
                                 <stop offset="100%" stop-color="#06b6d4"/>
                             </linearGradient>
-                            <clipPath id="pinClip">
-                                <path d="M50 0 C78 0 100 22 100 50 C100 72 78 88 50 108 C22 88 0 72 0 50 C0 22 22 0 50 0"/>
-                            </clipPath>
                         </defs>
 
-                        <!-- Main pin shape -->
-                        <path d="M50 0 C78 0 100 22 100 50 C100 72 78 88 50 108 C22 88 0 72 0 50 C0 22 22 0 50 0" fill="url(#pinGrad)"/>
+                        <!-- Left sound waves -->
+                        <path d="M8 30 Q8 20, 12 15 Q8 20, 8 30 Q8 40, 12 45" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" fill="none"/>
+                        <path d="M15 30 Q15 18, 20 12 Q15 18, 15 30 Q15 42, 20 48" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" fill="none"/>
+                        <path d="M22 30 Q22 16, 28 10 Q22 16, 22 30 Q22 44, 28 50" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" fill="none"/>
 
-                        <!-- White lower section -->
-                        <path d="M8 52 L92 52 C88 72 70 84 50 100 C30 84 12 72 8 52" fill="white"/>
+                        <!-- First S -->
+                        <path d="M38 12 C32 12, 30 18, 34 22 C38 26, 30 34, 30 40 C30 48, 38 50, 42 46" stroke="url(#ssGrad)" stroke-width="4" stroke-linecap="round" fill="none"/>
 
-                        <!-- SOUND text -->
-                        <text x="50" y="32" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1">SOUND</text>
+                        <!-- Second S -->
+                        <path d="M58 12 C52 12, 50 18, 54 22 C58 26, 50 34, 50 40 C50 48, 58 50, 62 46" stroke="url(#ssGrad)" stroke-width="4" stroke-linecap="round" fill="none"/>
 
-                        <!-- Waveform through SOUND -->
-                        <path d="M10 28 Q18 22, 24 28 Q30 34, 36 28 Q42 22, 50 28 Q58 34, 64 28 Q70 22, 76 28 Q82 34, 90 28" stroke="white" stroke-width="1.5" fill="none" opacity="0.7"/>
-
-                        <!-- SOLUTIONS text -->
-                        <text x="50" y="68" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600" fill="#3b82f6" text-anchor="middle" letter-spacing="0.5">SOLUTIONS</text>
-
-                        <!-- Audio bars at bottom -->
-                        <g fill="#8b5cf6" opacity="0.8">
-                            <rect x="22" y="88" width="4" height="10" rx="1"/>
-                            <rect x="30" y="82" width="4" height="16" rx="1"/>
-                            <rect x="38" y="78" width="4" height="20" rx="1"/>
-                            <rect x="46" y="75" width="4" height="23" rx="1"/>
-                            <rect x="54" y="80" width="4" height="18" rx="1"/>
-                            <rect x="62" y="85" width="4" height="13" rx="1"/>
-                            <rect x="70" y="90" width="4" height="8" rx="1"/>
-                        </g>
+                        <!-- Right sound waves -->
+                        <path d="M72 10 Q78 16, 78 30 Q78 44, 72 50" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" fill="none"/>
+                        <path d="M80 12 Q85 18, 85 30 Q85 42, 80 48" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" fill="none"/>
+                        <path d="M88 15 Q92 20, 92 30 Q92 40, 88 45" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" fill="none"/>
                     </svg>
                 </div>
                 <span class="logo-text">Sound Solutions</span>
