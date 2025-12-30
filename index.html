@@ -532,23 +532,45 @@
     <nav>
         <div class="container">
             <a href="#" class="logo">
-                <div class="logo-icon" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 0;">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                        <!-- Pin/badge shape background -->
-                        <path d="M20 2 C30 2 36 8 36 18 C36 26 28 32 20 38 C12 32 4 26 4 18 C4 8 10 2 20 2" fill="rgba(0,0,0,0.3)"/>
+                <div class="logo-icon" style="background: transparent; padding: 0; width: 44px; height: 44px; border-radius: 50%;">
+                    <svg width="44" height="44" viewBox="0 0 100 108" fill="none">
+                        <!-- Pin shape with gradient -->
+                        <defs>
+                            <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#3b82f6"/>
+                                <stop offset="50%" stop-color="#8b5cf6"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <clipPath id="pinClip">
+                                <path d="M50 0 C78 0 100 22 100 50 C100 72 78 88 50 108 C22 88 0 72 0 50 C0 22 22 0 50 0"/>
+                            </clipPath>
+                        </defs>
 
-                        <!-- Waveform through middle -->
-                        <path d="M8 16 Q11 12, 14 16 T20 16 T26 16 T32 16" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+                        <!-- Main pin shape -->
+                        <path d="M50 0 C78 0 100 22 100 50 C100 72 78 88 50 108 C22 88 0 72 0 50 C0 22 22 0 50 0" fill="url(#pinGrad)"/>
+
+                        <!-- White lower section -->
+                        <path d="M8 52 L92 52 C88 72 70 84 50 100 C30 84 12 72 8 52" fill="white"/>
+
+                        <!-- SOUND text -->
+                        <text x="50" y="32" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1">SOUND</text>
+
+                        <!-- Waveform through SOUND -->
+                        <path d="M10 28 Q18 22, 24 28 Q30 34, 36 28 Q42 22, 50 28 Q58 34, 64 28 Q70 22, 76 28 Q82 34, 90 28" stroke="white" stroke-width="1.5" fill="none" opacity="0.7"/>
+
+                        <!-- SOLUTIONS text -->
+                        <text x="50" y="68" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600" fill="#3b82f6" text-anchor="middle" letter-spacing="0.5">SOLUTIONS</text>
 
                         <!-- Audio bars at bottom -->
-                        <rect x="10" y="24" width="2" height="6" rx="0.5" fill="white" opacity="0.9"/>
-                        <rect x="14" y="21" width="2" height="9" rx="0.5" fill="white" opacity="0.9"/>
-                        <rect x="18" y="19" width="2" height="11" rx="0.5" fill="white" opacity="0.9"/>
-                        <rect x="22" y="22" width="2" height="8" rx="0.5" fill="white" opacity="0.9"/>
-                        <rect x="26" y="25" width="2" height="5" rx="0.5" fill="white" opacity="0.9"/>
-
-                        <!-- SS text hint -->
-                        <text x="20" y="13" font-family="Inter, sans-serif" font-size="7" font-weight="700" fill="white" text-anchor="middle" opacity="0.95">SS</text>
+                        <g fill="#8b5cf6" opacity="0.8">
+                            <rect x="22" y="88" width="4" height="10" rx="1"/>
+                            <rect x="30" y="82" width="4" height="16" rx="1"/>
+                            <rect x="38" y="78" width="4" height="20" rx="1"/>
+                            <rect x="46" y="75" width="4" height="23" rx="1"/>
+                            <rect x="54" y="80" width="4" height="18" rx="1"/>
+                            <rect x="62" y="85" width="4" height="13" rx="1"/>
+                            <rect x="70" y="90" width="4" height="8" rx="1"/>
+                        </g>
                     </svg>
                 </div>
                 <span class="logo-text">Sound Solutions</span>
