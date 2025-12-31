@@ -506,16 +506,28 @@
             }
 
             .app-card {
-                padding: 32px;
+                padding: 24px;
             }
 
             .app-card-inner {
                 grid-template-columns: 1fr;
-                gap: 32px;
+                gap: 24px;
             }
 
             .app-preview {
-                order: -1;
+                order: 1;
+            }
+
+            .app-content {
+                order: 0;
+            }
+
+            .app-preview-window {
+                max-width: 100%;
+            }
+
+            .app-preview-window > div {
+                min-height: 180px !important;
             }
 
             .footer-content {
