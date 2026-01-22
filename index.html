@@ -748,11 +748,16 @@
                 <article class="app-card" style="margin-top: 32px;">
                     <div class="app-card-inner">
                         <div class="app-content">
-                            <div class="app-icon-large" style="background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(239, 68, 68, 0.2);">
-                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1" style="opacity: 0.9;">
-                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                                    <circle cx="12" cy="12" r="4" opacity="0.6"/>
-                                    <path d="M8 12a4 4 0 0 0 8 0" stroke-dasharray="2 2" opacity="0.4"/>
+                            <div class="app-icon-large" style="background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(56, 189, 248, 0.2);">
+                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke-width="1.5" style="opacity: 0.9;">
+                                    <!-- Outer arc track -->
+                                    <path d="M 4 18 A 10 10 0 0 1 20 18" stroke="#333" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    <!-- Orange GR arc (left side) -->
+                                    <path d="M 4 18 A 10 10 0 0 1 8 8" stroke="#f97316" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    <!-- Cyan signal arc (right side) -->
+                                    <path d="M 12 4.5 A 10 10 0 0 1 20 18" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    <!-- Center indicator -->
+                                    <line x1="12" y1="6" x2="12" y2="8" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
                             </div>
                             <h3 class="app-name">DeBleed</h3>
@@ -780,7 +785,6 @@
                             </div>
                         </div>
                         <div class="app-preview app-preview-desktop">
-                            <div class="app-preview-glow" style="background: radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%);"></div>
                             <img src="debleed-preview.png" alt="DeBleed Plugin Interface" style="width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);">
                         </div>
                     </div>
