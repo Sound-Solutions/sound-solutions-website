@@ -748,7 +748,7 @@
                 <article class="app-card" style="margin-top: 32px;">
                     <div class="app-card-inner">
                         <div class="app-content">
-                            <div class="app-icon-large" style="background: transparent; border: none; box-shadow: none; padding: 0; overflow: hidden;">
+                            <div class="app-icon-large" style="background: transparent; border: none; box-shadow: 0 8px 32px rgba(249, 115, 22, 0.4); padding: 0; overflow: hidden;">
                                 <img src="debleed-icon.png" alt="DeBleed" style="width: 72px; height: 72px; object-fit: cover; border-radius: 14px;">
                             </div>
                             <h3 class="app-name">DeBleed</h3>
@@ -784,14 +784,20 @@
                 <article class="app-card" style="margin-top: 32px;">
                     <div class="app-card-inner">
                         <div class="app-content">
-                            <div class="app-icon-large" style="background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);">
-                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1" style="opacity: 0.9;">
-                                    <rect x="3" y="8" width="2" height="8" rx="1" opacity="0.4"/>
-                                    <rect x="7" y="5" width="2" height="14" rx="1" opacity="0.6"/>
-                                    <rect x="11" y="3" width="2" height="18" rx="1"/>
-                                    <rect x="15" y="6" width="2" height="12" rx="1" opacity="0.6"/>
-                                    <rect x="19" y="9" width="2" height="6" rx="1" opacity="0.4"/>
-                                    <path d="M2 20h20" stroke-dasharray="2 2" opacity="0.3"/>
+                            <div class="app-icon-large" style="background: #1a1a2e; border: 1px solid rgba(6, 182, 212, 0.3); box-shadow: 0 8px 32px rgba(6, 182, 212, 0.4);">
+                                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                    <!-- Waveform peaks - cyan input signal -->
+                                    <path d="M4 32 L6 28 L8 18 L10 22 L12 14 L14 20 L16 10 L18 16 L20 8 L22 14 L24 12 L26 18 L28 14 L30 20 L32 16 L34 22 L36 18 L38 24 L40 20 L42 26 L44 30" stroke="#06b6d4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <!-- Gated signal - purple -->
+                                    <path d="M4 34 L8 34 L10 30 L12 26 L14 28 L16 22 L18 24 L20 20 L22 22 L24 24 L26 26 L28 28 L30 30 L32 32 L36 34 L44 34" stroke="#a855f7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+                                    <!-- Filled area under purple -->
+                                    <path d="M4 34 L8 34 L10 30 L12 26 L14 28 L16 22 L18 24 L20 20 L22 22 L24 24 L26 26 L28 28 L30 30 L32 32 L36 34 L44 34 L44 40 L4 40 Z" fill="url(#sgGrad)" opacity="0.5"/>
+                                    <defs>
+                                        <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#a855f7"/>
+                                            <stop offset="100%" stop-color="#1a1a2e"/>
+                                        </linearGradient>
+                                    </defs>
                                 </svg>
                             </div>
                             <h3 class="app-name">SpectralGate</h3>
