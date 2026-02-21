@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["M22XX2CSAY.com.soundsolutionsllc.tourcal"],
+        "components": [
+          {
+            "/": "/tourcal-pwa/invite/*",
+            "comment": "TourCal invite links"
+          }
+        ]
+      }
+    ]
+  }
+}
