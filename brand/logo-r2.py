@@ -100,20 +100,20 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
     return mat
 
 # ---------------------------------------------------------------- shapes
-def rounded_s(W, H, w, n=48, taper=0.0):
+def rounded_s(W, H, w, n=48, taper=0.0, tip_r=0.0, tip_l=0.0):
     """Geometric S: three straight bars joined by two true half-circle turns.
     Outer edges land exactly on the box [0,W] x [0,H]; the bar ends are cut square."""
     yt, ym, yb = H - w / 2, H / 2, w / 2
     rho = (H - w) / 4
     xl, xr = w / 2 + rho, W - w / 2 - rho
     cl, cr = (yt + ym) / 2, (ym + yb) / 2
-    cl_pts = [(W, yt), (xl, yt)]
+    cl_pts = [(W + tip_r, yt), (xl, yt)]          # tip_r / tip_l run the end bars further out
     cl_pts += [(xl + rho * math.cos(a), cl + rho * math.sin(a))
                for a in np.linspace(math.pi / 2, 3 * math.pi / 2, n)[1:]]
     cl_pts += [(xr, ym)]
     cl_pts += [(xr + rho * math.cos(a), cr + rho * math.sin(a))
                for a in np.linspace(math.pi / 2, -math.pi / 2, n)[1:]]
-    cl_pts += [(0, yb)]
+    cl_pts += [(-tip_l, yb)]
     P = np.array(cl_pts, float)
     # offset both sides by w/2 along the left normal of the walking direction
     tang = np.gradient(P, axis=0)
@@ -271,7 +271,9 @@ elif OPTION == 'block':
     satin = material('satin', 'satin')
     # S size on each face: between the first small version (0.56 x 0.69) and edge to edge
     sw, sh, st, lift = CUBE * 0.68, CUBE * 0.82, CUBE * 0.17, 24.0
-    loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
+    # the top and bottom tips run straight out to the face's side edges, like a track
+    run = (CUBE - sw) / 2
+    loop = rounded_s(sw, sh, st, tip_r=run, tip_l=run) - [sw / 2, sh / 2]
 
     def make_s(name, depth, matrix):
         """One raised S: the drawn S, or the S glyph from FONT scaled to the same height."""
