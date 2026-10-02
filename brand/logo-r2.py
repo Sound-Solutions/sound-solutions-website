@@ -268,8 +268,8 @@ elif OPTION == 'block':
     left_g = material('left', 'grille', 0.16, 0.17, 'y')
     right_g = material('right', 'grille', 0.16, 0.17, 'x')
     satin = material('satin', 'satin')
-    # the S fills its face: its two tips land exactly in the face's corners
-    sw, sh, st, lift = CUBE, CUBE, CUBE * 0.21, 24.0
+    # S size on each face: between the first small version (0.56 x 0.69) and edge to edge
+    sw, sh, st, lift = CUBE * 0.68, CUBE * 0.82, CUBE * 0.17, 24.0
     loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
     # raised symbol on the top face, turned 45 deg so it reads upright from the camera.
     # Each plays both meanings of "sound": audio, and level-headed / sound of mind.
