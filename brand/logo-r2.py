@@ -46,7 +46,7 @@ def hex_holes(nodes, links, coord, pitch, radius):
     links.new(mn.outputs[0], sm.inputs['Value'])
     return sm.outputs['Result']
 
-def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
+def material(name, kind, grey=0.16, pitch=0.17, plane='z', rough=0.38):
     mat = bpy.data.materials.new(name); mat.use_nodes = True
     nt = mat.node_tree; nodes, links = nt.nodes, nt.links
     for n in list(nodes): nodes.remove(n)
@@ -99,7 +99,7 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
         mix = add(nodes, 'ShaderNodeMix', data_type='RGBA')
         mix.inputs['A'].default_value = (grey, grey, grey, 1); mix.inputs['B'].default_value = (0, 0, 0, 1)
         links.new(holes, mix.inputs['Factor']); links.new(mix.outputs['Result'], bsdf.inputs['Base Color'])
-        rr = add(nodes, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.38; rr.inputs['To Max'].default_value = 1.0
+        rr = add(nodes, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = rough; rr.inputs['To Max'].default_value = 1.0
         links.new(holes, rr.inputs['Value']); links.new(rr.outputs['Result'], bsdf.inputs['Roughness'])
         inv = add(nodes, 'ShaderNodeMath', operation='SUBTRACT'); inv.inputs[0].default_value = 1.0
         links.new(holes, inv.inputs[1])
@@ -362,14 +362,14 @@ elif OPTION == 'block':
     studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise, elev=30))
 
 elif OPTION == 'tiles':
-    # Rubik-style 5x5 cube: dark satin tiles spell a hard-edged S on every face, the rest are grille
-    top_g = material('top', 'grille', 0.22, 0.17, 'z')
-    left_g = material('left', 'grille', 0.22, 0.17, 'y')
-    right_g = material('right', 'grille', 0.22, 0.17, 'x')
-    dark = material('dark', 'gloss')
+    # Rubik-style 7x7 cube: matte black tiles spell a hard-edged S inside a one-tile grille border on every face
+    top_g = material('top', 'grille', 0.17, 0.17, 'z', rough=0.58)
+    left_g = material('left', 'grille', 0.17, 0.17, 'y', rough=0.58)
+    right_g = material('right', 'grille', 0.17, 0.17, 'x', rough=0.58)
+    dark = material('dark', 'matte')
     S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
-    lit = lambda r, c: S5[r][c] == '#'
-    n_, g = 5, 8.0; s_ = CUBE / n_
+    n_, g = 7, 7.0; s_ = CUBE / n_
+    lit = lambda r, c: 0 < r < n_ - 1 and 0 < c < n_ - 1 and S5[r - 1][c - 1] == '#'
     for i in range(n_):
         for j in range(n_):
             for k in range(n_):
@@ -380,7 +380,7 @@ elif OPTION == 'tiles':
                 top_m = dark if lit(i, j) else top_g                   # top: letter right +Y, up -X (lines up with the right side)
                 left_m = dark if lit(n_ - 1 - k, i) else left_g        # left: letter right +X, up +Z
                 right_m = dark if lit(n_ - 1 - k, j) else right_g      # right: letter right +Y, up +Z
-                box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, dark), 8, 4)
+                box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, dark), 6, 4)
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
     studio(target, *iso_camera(target, 2 * CUBE * 1.16, elev=30), key_up=1.5)   # key lower so the left side reads
 
