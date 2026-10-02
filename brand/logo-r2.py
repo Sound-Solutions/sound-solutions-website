@@ -322,7 +322,7 @@ elif OPTION == 'block':
     # frame the cube plus whatever stands on top of it
     sc_ = math.cos(math.radians(24)); rise = 0.0
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2 + rise / 2 / sc_)) * U
-    studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise))
+    studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise, elev=30))
 
 elif OPTION == 'badge':
     # one rounded S, raised in satin black on a square of speaker grille
