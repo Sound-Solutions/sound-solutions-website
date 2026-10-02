@@ -276,46 +276,35 @@ elif OPTION == 'block':
         m = Matrix(((K, 0, K, 0), (K, 0, -K, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
         return Matrix.Translation((centre + Vector((K, -K, 0)) * off) * U) @ m
     extra = 0.0
-    if TOP == 'level':
-        # spirit-level vial: satin housing, green liquid, bubble dead centre
-        hw, hh, hr = 480.0, 170.0, 66.0
-        th_ = np.linspace(0, math.pi / 2, 16); house = []
-        for cx, cy, q in ((hw/2-hr, hh/2-hr, 0), (-hw/2+hr, hh/2-hr, 1), (-hw/2+hr, -hh/2+hr, 2), (hw/2-hr, -hh/2+hr, 3)):
-            house += [(cx + hr * math.cos(t + q * math.pi / 2), cy + hr * math.sin(t + q * math.pi / 2)) for t in th_]
-        curve_slab('housing', np.array(house), 44, 6, satin, on_top(18))
-        liquid = bpy.data.materials.new('liquid'); liquid.use_nodes = True
-        b = liquid.node_tree.nodes['Principled BSDF']
-        b.inputs['Base Color'].default_value = (0.25, 1.0, 0.08, 1)
-        b.inputs['Transmission Weight'].default_value = 0.6; b.inputs['Roughness'].default_value = 0.08
-        b.inputs['Emission Color'].default_value = (0.22, 1.0, 0.08, 1); b.inputs['Emission Strength'].default_value = 0.6
-        air = bpy.data.materials.new('air'); air.use_nodes = True
-        ab = air.node_tree.nodes['Principled BSDF']
-        ab.inputs['Base Color'].default_value = (0.75, 1.0, 0.65, 1); ab.inputs['Roughness'].default_value = 0.15
-        ab.inputs['Emission Color'].default_value = (0.8, 1.0, 0.7, 1); ab.inputs['Emission Strength'].default_value = 1.2
-        def ellipsoid(name, sx, sy, sz, z, mat):
-            bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=24, radius=1.0)
-            for v in bm.verts: v.co = Vector((v.co.x * sx, v.co.y * sy, v.co.z * sz)) * U
-            me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
-            for pg in me.polygons: pg.use_smooth = True
-            ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
-            ob.matrix_world = on_top(z); me.materials.append(mat)
-        ellipsoid('vial', 190, 46, 30, 44, liquid)
-        ellipsoid('bubble', 48, 25, 10, 70, air)
-    elif TOP == 'fork':
-        # tuning fork standing on the cube like it sits on its resonator box
-        r_, w_, tl, sl = 72.0, 58.0, 190.0, 100.0
-        base = sl + r_ + w_ / 2
-        pts = [(-r_, base + tl)] + [(-r_, base)] + [(r_ * math.cos(a), base + r_ * math.sin(a)) for a in np.linspace(math.pi, 2 * math.pi, 40)[1:-1]] + [(r_, base), (r_, base + tl)]
-        curve_slab('tines', stroke(np.array(pts), w_), 46, 6, satin, upright())
-        curve_slab('stem', stroke(np.array([[0, -20.0], [0, sl + 10]]), w_ * 1.1), 46, 6, satin, upright())
-        extra = base + tl
-    elif TOP == 'balance':
-        # a beam resting dead level on a point
-        tri = np.array([[-95.0, -10.0], [95.0, -10.0], [0.0, 150.0]])
-        curve_slab('fulcrum', tri, 40, 5, satin, upright())
-        beam = np.array([[-240.0, 150.0], [240.0, 150.0], [240.0, 192.0], [-240.0, 192.0]])
-        curve_slab('beam', beam, 40, 5, satin, upright())
-        extra = 192.0
+    # embossed like the S's: same satin, same 24-unit lift, lying flat on the top face
+    lift_t = 24.0
+    def emboss(name, loops):
+        curve_slab(name, loops, lift_t + 4, 4, satin, on_top((lift_t - 4) / 2))
+    if TOP == 'bullseye':
+        # ring + centre dot: a speaker from the front, a bullseye level from above
+        emboss('ring', [circle(190), circle(122, cw=True)])
+        emboss('dot', circle(52))
+    elif TOP == 'settle':
+        # a wave that settles into a flat line: sound, and a steady mind
+        xs = np.linspace(-215, 215, 240); t_ = (xs + 215) / 430
+        ys = 80 * (1 - t_) ** 1.3 * np.sin(2 * math.pi * 1.5 * t_)   # turns stay wider than the stroke
+        emboss('wave', stroke(np.stack([xs, ys], 1), 46))
+    elif TOP == 'split':
+        # a circle split into two balanced halves by a sine-wave S
+        R_, gap = 190.0, 16.0
+        ys = np.linspace(R_, -R_, 120)
+        cx = -58 * np.sin(math.pi * ys / R_)
+        curve = np.stack([cx, ys], 1)
+        def half(sign):
+            a = np.linspace(-math.pi / 2, -3 * math.pi / 2, 90) if sign < 0 else np.linspace(-math.pi / 2, math.pi / 2, 90)
+            arc = np.stack([R_ * np.cos(a), R_ * np.sin(a)], 1)
+            if sign < 0:
+                pts = np.vstack([curve, arc[1:-1]])          # curve top->bottom, arc bottom->left->top
+            else:
+                pts = np.vstack([curve[::-1], arc[::-1][1:-1][::-1]])
+                pts = np.vstack([curve[::-1], np.stack([R_ * np.cos(np.linspace(math.pi / 2, -math.pi / 2, 90)), R_ * np.sin(np.linspace(math.pi / 2, -math.pi / 2, 90))], 1)[1:-1]])
+            return pts + [sign * gap / 2, 0]
+        emboss('half_l', half(-1)); emboss('half_r', half(1))
     box('body', (-CUBE, 0, -CUBE), (0, CUBE, 0), (top_g, left_g, right_g, satin), 8)
     sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
     loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
@@ -326,7 +315,7 @@ elif OPTION == 'block':
     curve_slab('sr', loop, lift + 4, 4, satin,
                Matrix.Translation(Vector(((lift - 4) / 2, CUBE / 2, -CUBE / 2)) * U) @ rm)
     # frame the cube plus whatever stands on top of it
-    sc_ = math.cos(math.radians(24)); rise = 290.0   # fits the tallest top (the fork) on every version
+    sc_ = math.cos(math.radians(24)); rise = 0.0
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2 + rise / 2 / sc_)) * U
     studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise))
 
