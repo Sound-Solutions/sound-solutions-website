@@ -44,7 +44,7 @@ def hex_holes(nodes, links, coord, pitch, radius):
     links.new(mn.outputs[0], sm.inputs['Value'])
     return sm.outputs['Result']
 
-def material(name, kind, grey=0.16, pitch=0.17):
+def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
     mat = bpy.data.materials.new(name); mat.use_nodes = True
     nt = mat.node_tree; nodes, links = nt.nodes, nt.links
     for n in list(nodes): nodes.remove(n)
@@ -69,10 +69,19 @@ def material(name, kind, grey=0.16, pitch=0.17):
         bump = add(nodes, 'ShaderNodeBump', in_Strength=0.06, in_Distance=0.002)
         links.new(nz.outputs['Fac'], bump.inputs['Height']); links.new(bump.outputs[0], bsdf.inputs['Normal'])
     elif kind == 'grille':
-        holes_all = hex_holes(nodes, links, coord, pitch, pitch * 0.376)
+        # plane: which face carries the holes -- z (top), y (left, facing -Y), x (right, facing +X)
+        sp = add(nodes, 'ShaderNodeSeparateXYZ'); links.new(coord, sp.inputs[0])
+        cb = add(nodes, 'ShaderNodeCombineXYZ')
+        a_, b_ = {'z': ('X', 'Y'), 'y': ('X', 'Z'), 'x': ('Y', 'Z')}[plane]
+        links.new(sp.outputs[a_], cb.inputs['X']); links.new(sp.outputs[b_], cb.inputs['Y'])
+        holes_all = hex_holes(nodes, links, cb.outputs[0], pitch, pitch * 0.376)
         sep = add(nodes, 'ShaderNodeSeparateXYZ'); links.new(tc.outputs['Normal'], sep.inputs[0])
+        nsel = sep.outputs[{'z': 'Z', 'y': 'Y', 'x': 'X'}[plane]]
+        if plane == 'y':
+            neg = add(nodes, 'ShaderNodeMath', operation='MULTIPLY'); neg.inputs[1].default_value = -1.0
+            links.new(nsel, neg.inputs[0]); nsel = neg.outputs[0]
         cap = add(nodes, 'ShaderNodeMath', operation='GREATER_THAN'); cap.inputs[1].default_value = 0.95
-        links.new(sep.outputs['Z'], cap.inputs[0])
+        links.new(nsel, cap.inputs[0])
         hm = add(nodes, 'ShaderNodeMath', operation='MULTIPLY')
         links.new(holes_all, hm.inputs[0]); links.new(cap.outputs[0], hm.inputs[1])
         holes = hm.outputs[0]
@@ -221,16 +230,38 @@ if OPTION == 'rounded':
 
 elif OPTION == 'solved':
     # a solved 3x3 cube: every face one material, like the reference cube put in order
-    grille, satin, brushed = material('grille', 'grille', 0.16, 0.12), material('satin', 'satin'), material('brushed', 'brushed')
+    # top: option A's fine grille; sides: option C's bigger-hole grille
+    top_g = material('top', 'grille', 0.16, 0.17, 'z')
+    left_g = material('left', 'grille', 0.16, 0.30, 'y')
+    right_g = material('right', 'grille', 0.16, 0.30, 'x')
+    satin = material('satin', 'satin')
     s, g = CUBE / 3, 9.0
     for i in range(3):
         for j in range(3):
             for k in range(3):
                 lo = (-CUBE + i * s + g / 2, j * s + g / 2, -CUBE + k * s + g / 2)
                 hi = (-CUBE + (i + 1) * s - g / 2, (j + 1) * s - g / 2, -CUBE + (k + 1) * s - g / 2)
-                box(f'c{i}{j}{k}', lo, hi, (grille, satin, brushed, satin), 10, 4)
+                box(f'c{i}{j}{k}', lo, hi, (top_g, left_g, right_g, satin), 10, 4)
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
     studio(target, *iso_camera(target, 2 * CUBE * 1.12))
+
+elif OPTION == 'block':
+    # one solid cube: option A's fine grille on top, option C (raised S on grille) on each side
+    top_g = material('top', 'grille', 0.16, 0.17, 'z')
+    left_g = material('left', 'grille', 0.16, 0.30, 'y')
+    right_g = material('right', 'grille', 0.16, 0.30, 'x')
+    satin = material('satin', 'satin')
+    box('body', (-CUBE, 0, -CUBE), (0, CUBE, 0), (top_g, left_g, right_g, satin), 8)
+    sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
+    loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
+    lm = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))   # local x->X, y->Z, z->-Y
+    rm = Matrix(((0, 0, 1, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, 1)))    # local x->Y, y->Z, z->+X
+    curve_slab('sl', loop, lift + 4, 4, satin,
+               Matrix.Translation(Vector((-CUBE / 2, -(lift - 4) / 2, -CUBE / 2)) * U) @ lm)
+    curve_slab('sr', loop, lift + 4, 4, satin,
+               Matrix.Translation(Vector(((lift - 4) / 2, CUBE / 2, -CUBE / 2)) * U) @ rm)
+    target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
+    studio(target, *iso_camera(target, 2 * CUBE * 1.16))
 
 elif OPTION == 'badge':
     # one rounded S, raised in satin black on a square of speaker grille
