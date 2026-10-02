@@ -268,7 +268,8 @@ elif OPTION == 'block':
     left_g = material('left', 'grille', 0.16, 0.17, 'y')
     right_g = material('right', 'grille', 0.16, 0.17, 'x')
     satin = material('satin', 'satin')
-    sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
+    # the S fills its face: its two tips land exactly in the face's corners
+    sw, sh, st, lift = CUBE, CUBE, CUBE * 0.21, 24.0
     loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
     # raised symbol on the top face, turned 45 deg so it reads upright from the camera.
     # Each plays both meanings of "sound": audio, and level-headed / sound of mind.
@@ -366,6 +367,20 @@ sc.view_settings.view_transform = 'AgX'
 try: sc.view_settings.look = 'AgX - Medium High Contrast'
 except Exception: pass
 sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
-sc.render.filepath = OUT
-bpy.ops.render.render(write_still=True)
-print('WROTE', OUT)
+if OUT.endswith('.blend'):
+    # a working file: every 3D view looks through the camera with the real render shading
+    for scr in bpy.data.screens:
+        for area in scr.areas:
+            if area.type == 'VIEW_3D':
+                for sp in area.spaces:
+                    if sp.type == 'VIEW_3D':
+                        sp.shading.type = 'RENDERED'
+                        sp.region_3d.view_perspective = 'CAMERA'
+                        sp.overlay.show_overlays = False
+    sc.cycles.preview_samples = 64
+    bpy.ops.wm.save_as_mainfile(filepath=OUT)
+    print('SAVED', OUT)
+else:
+    sc.render.filepath = OUT
+    bpy.ops.render.render(write_still=True)
+    print('WROTE', OUT)
