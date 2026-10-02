@@ -363,9 +363,9 @@ elif OPTION == 'block':
 
 elif OPTION == 'tiles':
     # Rubik-style 7x7 cube: matte black tiles spell a hard-edged S inside a one-tile grille border on every face
-    top_g = material('top', 'grille', 0.045, 0.17, 'z', rough=0.6, metal=0.0)
-    left_g = material('left', 'grille', 0.045, 0.17, 'y', rough=0.6, metal=0.0)
-    right_g = material('right', 'grille', 0.045, 0.17, 'x', rough=0.6, metal=0.0)
+    top_g = material('top', 'grille', 0.16, 0.17, 'z')
+    left_g = material('left', 'grille', 0.16, 0.17, 'y')
+    right_g = material('right', 'grille', 0.16, 0.17, 'x')
     dark = material('dark', 'matte')
     S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
     n_, g = 7, 7.0; s_ = CUBE / n_
