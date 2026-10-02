@@ -53,7 +53,11 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z', rough=0.38, metal=1.0
     out = add(nodes, 'ShaderNodeOutputMaterial'); bsdf = add(nodes, 'ShaderNodeBsdfPrincipled')
     links.new(bsdf.outputs[0], out.inputs['Surface'])
     tc = add(nodes, 'ShaderNodeTexCoord'); coord = tc.outputs['Object']
-    if kind == 'gloss':          # shiny black: reflects the dark room, catches the lights on its edges
+    if kind == 'metalgrey':      # the grille's metal grey, no holes
+        bsdf.inputs['Metallic'].default_value = 1.0
+        bsdf.inputs['Base Color'].default_value = (grey, grey, grey, 1)
+        bsdf.inputs['Roughness'].default_value = rough
+    elif kind == 'gloss':          # shiny black: reflects the dark room, catches the lights on its edges
         bsdf.inputs['Base Color'].default_value = (0.008, 0.008, 0.008, 1)
         bsdf.inputs['Roughness'].default_value = 0.14
         bsdf.inputs['Coat Weight'].default_value = 1.0; bsdf.inputs['Coat Roughness'].default_value = 0.04
@@ -363,9 +367,11 @@ elif OPTION == 'block':
 
 elif OPTION == 'tiles':
     # Rubik-style 7x7 cube: matte black tiles spell a hard-edged S inside a one-tile grille border on every face
-    top_g = material('top', 'grille', 0.16, 0.17, 'z')
-    left_g = material('left', 'grille', 0.16, 0.17, 'y')
-    right_g = material('right', 'grille', 0.16, 0.17, 'x')
+    # the S tiles carry the grille holes in matte black; every other tile is smooth metal grey
+    smooth = material('smooth', 'metalgrey', 0.09)   # darker than the grille's 0.16: without holes it reads brighter
+    s_top = material('s_top', 'grille', 0.006, 0.17, 'z', rough=0.75, metal=0.0)
+    s_left = material('s_left', 'grille', 0.006, 0.17, 'y', rough=0.75, metal=0.0)
+    s_right = material('s_right', 'grille', 0.006, 0.17, 'x', rough=0.75, metal=0.0)
     dark = material('dark', 'matte')
     S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
     n_, g = 7, 7.0; s_ = CUBE / n_
@@ -377,10 +383,10 @@ elif OPTION == 'tiles':
                     continue                          # hidden inside
                 lo = (-CUBE + i * s_ + g / 2, j * s_ + g / 2, -CUBE + k * s_ + g / 2)
                 hi = (-CUBE + (i + 1) * s_ - g / 2, (j + 1) * s_ - g / 2, -CUBE + (k + 1) * s_ - g / 2)
-                top_m = dark if lit(i, j) else top_g                   # top: letter right +Y, up -X (lines up with the right side)
-                left_m = dark if lit(n_ - 1 - k, i) else left_g        # left: letter right +X, up +Z
-                right_m = dark if lit(n_ - 1 - k, j) else right_g      # right: letter right +Y, up +Z
-                box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, dark), 6, 4)
+                top_m = s_top if lit(i, j) else smooth                   # top: letter right +Y, up -X (lines up with the right side)
+                left_m = s_left if lit(n_ - 1 - k, i) else smooth        # left: letter right +X, up +Z
+                right_m = s_right if lit(n_ - 1 - k, j) else smooth      # right: letter right +Y, up +Z
+                box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, smooth), 6, 4)
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
     studio(target, *iso_camera(target, 2 * CUBE * 1.16, elev=30), key_up=1.5)   # key lower so the left side reads
 
