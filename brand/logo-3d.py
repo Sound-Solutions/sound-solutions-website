@@ -345,7 +345,21 @@ def s_rects():
     return [(0, Wd, y[0], y[1]), (Wd - w, Wd, y[1], y[2]), (0, Wd, y[2], y[3]),
             (0, w, y[3], y[4]), (0, Wd, y[4], y[5])]
 
-def box_union(name, boxes, mat):
+def wedge(name, tri, z0, z1):
+    """Triangular prism cutter (never rendered)."""
+    bm = bmesh.new()
+    lo = [bm.verts.new((x * U, y * U, z0 * U)) for x, y in tri]
+    hi = [bm.verts.new((x * U, y * U, z1 * U)) for x, y in tri]
+    bm.faces.new(lo[::-1]); bm.faces.new(hi)
+    for i in range(3):
+        j = (i + 1) % 3; bm.faces.new([lo[i], lo[j], hi[j], hi[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
+    ob.hide_render = True; ob.display_type = 'WIRE'
+    return ob
+
+def box_union(name, boxes, mat, cutters=()):
     """One solid mesh from axis-aligned boxes: shared volume merges, nothing overlaps."""
     ax = [sorted({b[2 * k] for b in boxes} | {b[2 * k + 1] for b in boxes}) for k in range(3)]
     n = [len(a) - 1 for a in ax]
@@ -377,6 +391,8 @@ def box_union(name, boxes, mat):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
     me.materials.append(mat)
+    for ct in cutters:
+        bo = ob.modifiers.new('miter', 'BOOLEAN'); bo.operation = 'DIFFERENCE'; bo.solver = 'EXACT'; bo.object = ct
     bv = ob.modifiers.new('bevel', 'BEVEL'); bv.width = BEVEL * U; bv.segments = 4
     bv.limit_method = 'ANGLE'; bv.harden_normals = True
     for f in me.polygons: f.use_smooth = True
@@ -412,11 +428,17 @@ TILE_RIGHT = {(0, 0): 'satin', (1, 0): 'rubber', (2, 0): 'satin', (0, 1): 'grill
 objs = []
 if cells is None:
     objs.append(box_union('top', [(-CUBE, 0, 0, CUBE, -DEPTH, 0)], MATS[top_mat]))
-    sides = []
-    for u0, u1, v0, v1 in s_rects():
-        sides.append((u0 - CUBE, u1 - CUBE, 0, DEPTH, v0 - CUBE, v1 - CUBE))   # left face, y in [0, t]
-        sides.append((-DEPTH, 0, u0, u1, v0 - CUBE, v1 - CUBE))                # right face, x in [-t, 0]
-    objs.append(box_union('sides', sides, MATS[side_mat]))
+    rects = s_rects(); t, e = DEPTH, 20.0
+    left = [(u0 - CUBE, u1 - CUBE, 0, t, v0 - CUBE, v1 - CUBE) for u0, u1, v0, v1 in rects]
+    right = [(-t, 0, u0, u1, v0 - CUBE, v1 - CUBE) for u0, u1, v0, v1 in rects]
+    # 45-degree miter on the front edge, only where both S's reach the corner (the three bars);
+    # where only one does, it keeps the full corner, so nothing overlaps and nothing is missing
+    bars = [(r[2] - CUBE, r[3] - CUBE) for r in rects if r[0] == 0 and r[1] == CUBE]
+    zpad = lambda z0, z1: (z0 - e if z0 <= -CUBE else z0, z1 + e if z1 >= -t - GAP else z1)
+    lcut = [wedge('lcut', [(-t - e, t + e), (e, t + e), (e, -e)], *zpad(*b)) for b in bars]
+    rcut = [wedge('rcut', [(-t - e, t + e), (-t - e, -e), (e, -e)], *zpad(*b)) for b in bars]
+    objs.append(box_union('left', left, MATS[side_mat], lcut))
+    objs.append(box_union('right', right, MATS[side_mat], rcut))
 else:
     for face, (g, us, vs, bb), table in (('top', (tg, tu, tv, t_bb), TILE_TOP),
                                          ('left', (LG, LU, LV, L_BB), TILE_LEFT),
