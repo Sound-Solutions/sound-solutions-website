@@ -53,7 +53,11 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
     out = add(nodes, 'ShaderNodeOutputMaterial'); bsdf = add(nodes, 'ShaderNodeBsdfPrincipled')
     links.new(bsdf.outputs[0], out.inputs['Surface'])
     tc = add(nodes, 'ShaderNodeTexCoord'); coord = tc.outputs['Object']
-    if kind == 'satin':
+    if kind == 'matte':          # flat black that stays darker than the grille under the key light
+        bsdf.inputs['Base Color'].default_value = (0.006, 0.006, 0.006, 1)
+        bsdf.inputs['Roughness'].default_value = 0.75
+        bsdf.inputs['Specular IOR Level'].default_value = 0.2
+    elif kind == 'satin':
         bsdf.inputs['Base Color'].default_value = (0.026, 0.026, 0.026, 1)
         bsdf.inputs['Roughness'].default_value = 0.42
         bsdf.inputs['Specular IOR Level'].default_value = 0.6
@@ -352,6 +356,29 @@ elif OPTION == 'block':
     sc_ = math.cos(math.radians(24)); rise = 0.0
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2 + rise / 2 / sc_)) * U
     studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise, elev=30))
+
+elif OPTION == 'tiles':
+    # Rubik-style 5x5 cube: dark satin tiles spell a hard-edged S on every face, the rest are grille
+    top_g = material('top', 'grille', 0.22, 0.17, 'z')
+    left_g = material('left', 'grille', 0.22, 0.17, 'y')
+    right_g = material('right', 'grille', 0.22, 0.17, 'x')
+    dark = material('dark', 'matte')
+    S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
+    lit = lambda r, c: S5[r][c] == '#'
+    n_, g = 5, 8.0; s_ = CUBE / n_
+    for i in range(n_):
+        for j in range(n_):
+            for k in range(n_):
+                if not (k == n_ - 1 or j == 0 or i == n_ - 1):
+                    continue                          # hidden inside
+                lo = (-CUBE + i * s_ + g / 2, j * s_ + g / 2, -CUBE + k * s_ + g / 2)
+                hi = (-CUBE + (i + 1) * s_ - g / 2, (j + 1) * s_ - g / 2, -CUBE + (k + 1) * s_ - g / 2)
+                top_m = dark if lit(i, j) else top_g                   # top: letter right +Y, up -X (lines up with the right side)
+                left_m = dark if lit(n_ - 1 - k, i) else left_g        # left: letter right +X, up +Z
+                right_m = dark if lit(n_ - 1 - k, j) else right_g      # right: letter right +Y, up +Z
+                box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, dark), 8, 4)
+    target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
+    studio(target, *iso_camera(target, 2 * CUBE * 1.16, elev=30))
 
 elif OPTION == 'badge':
     # one rounded S, raised in satin black on a square of speaker grille
