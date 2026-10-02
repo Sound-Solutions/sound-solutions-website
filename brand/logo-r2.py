@@ -266,6 +266,8 @@ elif OPTION == 'block':
     left_g = material('left', 'grille', 0.16, 0.17, 'y')
     right_g = material('right', 'grille', 0.16, 0.17, 'x')
     satin = material('satin', 'satin')
+    sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
+    loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
     # raised symbol on the top face, turned 45 deg so it reads upright from the camera.
     # Each plays both meanings of "sound": audio, and level-headed / sound of mind.
     centre = Vector((-CUBE / 2, CUBE / 2, 0))
@@ -280,7 +282,10 @@ elif OPTION == 'block':
     lift_t = 24.0
     def emboss(name, loops):
         curve_slab(name, loops, lift_t + 4, 4, satin, on_top((lift_t - 4) / 2))
-    if TOP == 'bullseye':
+    if TOP == 's':
+        # a third S, same size and lift as the side S's: Sound, and both ends of Solutions
+        emboss('s_top', loop)
+    elif TOP == 'bullseye':
         # ring + centre dot: a speaker from the front, a bullseye level from above
         emboss('ring', [circle(190), circle(122, cw=True)])
         emboss('dot', circle(52))
@@ -306,8 +311,6 @@ elif OPTION == 'block':
             return pts + [sign * gap / 2, 0]
         emboss('half_l', half(-1)); emboss('half_r', half(1))
     box('body', (-CUBE, 0, -CUBE), (0, CUBE, 0), (top_g, left_g, right_g, satin), 8)
-    sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
-    loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
     lm = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))   # local x->X, y->Z, z->-Y
     rm = Matrix(((0, 0, 1, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, 1)))    # local x->Y, y->Z, z->+X
     curve_slab('sl', loop, lift + 4, 4, satin,
