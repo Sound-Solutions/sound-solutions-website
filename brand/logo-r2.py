@@ -99,7 +99,7 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
     return mat
 
 # ---------------------------------------------------------------- shapes
-def rounded_s(W, H, w, n=48):
+def rounded_s(W, H, w, n=48, taper=0.0):
     """Geometric S: three straight bars joined by two true half-circle turns.
     Outer edges land exactly on the box [0,W] x [0,H]; the bar ends are cut square."""
     yt, ym, yb = H - w / 2, H / 2, w / 2
@@ -119,7 +119,9 @@ def rounded_s(W, H, w, n=48):
     tang[0] = P[1] - P[0]; tang[-1] = P[-1] - P[-2]
     tang /= np.linalg.norm(tang, axis=1)[:, None]
     nrm = np.stack([-tang[:, 1], tang[:, 0]], 1)
-    a, b = P + nrm * w / 2, P - nrm * w / 2
+    # taper > 0 thickens the stroke gradually from the letter's top (none) to its bottom (+taper)
+    ww = w * (1 + taper * (1 - np.clip(P[:, 1] / H, 0, 1)))[:, None]
+    a, b = P + nrm * ww / 2, P - nrm * ww / 2
     return np.vstack([a, b[::-1]])
 
 def stroke(P, w):
@@ -285,8 +287,8 @@ elif OPTION == 'block':
     if TOP == 's':
         # a third S, same size and lift as the side S's: Sound, and both ends of Solutions
         # squared to the face edges and lined up with the right-side S: letter right along +Y
-        # strokes 18% heavier than the sides (same outer size): the slanted top face thins it to the eye
-        top_loop = rounded_s(sw, sh, st * 1.18) - [sw / 2, sh / 2]
+        # same S, stroke growing gradually toward the letter's bottom: the slanted top face thins it to the eye
+        top_loop = rounded_s(sw, sh, st, taper=0.35) - [sw / 2, sh / 2]
         curve_slab('s_top', top_loop, lift_t + 4, 4, satin,
                    Matrix.Translation((centre + Vector((0, 0, (lift_t - 4) / 2))) * U) @ Matrix.Rotation(math.radians(90), 4, 'Z'))
     elif TOP == 'bullseye':
