@@ -46,7 +46,7 @@ def hex_holes(nodes, links, coord, pitch, radius):
     links.new(mn.outputs[0], sm.inputs['Value'])
     return sm.outputs['Result']
 
-def material(name, kind, grey=0.16, pitch=0.17, plane='z', rough=0.38):
+def material(name, kind, grey=0.16, pitch=0.17, plane='z', rough=0.38, metal=1.0):
     mat = bpy.data.materials.new(name); mat.use_nodes = True
     nt = mat.node_tree; nodes, links = nt.nodes, nt.links
     for n in list(nodes): nodes.remove(n)
@@ -95,7 +95,7 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z', rough=0.38):
         hm = add(nodes, 'ShaderNodeMath', operation='MULTIPLY')
         links.new(holes_all, hm.inputs[0]); links.new(cap.outputs[0], hm.inputs[1])
         holes = hm.outputs[0]
-        bsdf.inputs['Metallic'].default_value = 1.0
+        bsdf.inputs['Metallic'].default_value = metal
         mix = add(nodes, 'ShaderNodeMix', data_type='RGBA')
         mix.inputs['A'].default_value = (grey, grey, grey, 1); mix.inputs['B'].default_value = (0, 0, 0, 1)
         links.new(holes, mix.inputs['Factor']); links.new(mix.outputs['Result'], bsdf.inputs['Base Color'])
@@ -363,9 +363,9 @@ elif OPTION == 'block':
 
 elif OPTION == 'tiles':
     # Rubik-style 7x7 cube: matte black tiles spell a hard-edged S inside a one-tile grille border on every face
-    top_g = material('top', 'grille', 0.17, 0.17, 'z', rough=0.58)
-    left_g = material('left', 'grille', 0.17, 0.17, 'y', rough=0.58)
-    right_g = material('right', 'grille', 0.17, 0.17, 'x', rough=0.58)
+    top_g = material('top', 'grille', 0.045, 0.17, 'z', rough=0.6, metal=0.0)
+    left_g = material('left', 'grille', 0.045, 0.17, 'y', rough=0.6, metal=0.0)
+    right_g = material('right', 'grille', 0.045, 0.17, 'x', rough=0.6, metal=0.0)
     dark = material('dark', 'matte')
     S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
     n_, g = 7, 7.0; s_ = CUBE / n_
