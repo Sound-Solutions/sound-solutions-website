@@ -10,6 +10,7 @@ argv = sys.argv[sys.argv.index('--') + 1:]
 OPTION, OUT = argv[0], argv[1]
 RES = int(argv[2]) if len(argv) > 2 else 1200
 TOP = argv[3] if len(argv) > 3 else 'none'      # block option: symbol on the top face
+FONT = argv[4] if len(argv) > 4 else ''         # block option: a font file for the S (else the drawn S)
 U = 0.01                         # design unit -> metres
 K = math.sqrt(0.5)
 
@@ -271,6 +272,28 @@ elif OPTION == 'block':
     # S size on each face: between the first small version (0.56 x 0.69) and edge to edge
     sw, sh, st, lift = CUBE * 0.68, CUBE * 0.82, CUBE * 0.17, 24.0
     loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
+
+    def make_s(name, depth, matrix):
+        """One raised S: the drawn S, or the S glyph from FONT scaled to the same height."""
+        if not FONT:
+            return curve_slab(name, loop, depth, 4, satin, matrix)
+        cu = bpy.data.curves.new(name, 'FONT'); cu.body = 'S'
+        cu.font = bpy.data.fonts.load(FONT)
+        cu.extrude = (depth / 2 - 4) * U; cu.bevel_depth = 4 * U; cu.bevel_resolution = 4
+        cu.offset = 0.0
+        ob = bpy.data.objects.new(name, cu); bpy.context.collection.objects.link(ob)
+        dg = bpy.context.evaluated_depsgraph_get()
+        vs_ = np.array([v.co[:] for v in ob.evaluated_get(dg).to_mesh().vertices])
+        cu.size = sh * U / (vs_[:, 1].max() - vs_[:, 1].min())
+        cu.offset = -4 * U / cu.size     # a text curve's offset is in glyph units, so undo the size
+        ob = to_mesh(ob)
+        vs_ = np.array([v.co[:] for v in ob.data.vertices])
+        c_ = (vs_.min(0) + vs_.max(0)) / 2
+        ob.data.transform(Matrix.Translation(Vector((-c_[0], -c_[1], 0))))
+        ob.data.materials.clear(); ob.data.materials.append(satin)
+        for pg in ob.data.polygons: pg.use_smooth = False
+        ob.matrix_world = matrix
+        return ob
     # raised symbol on the top face, turned 45 deg so it reads upright from the camera.
     # Each plays both meanings of "sound": audio, and level-headed / sound of mind.
     centre = Vector((-CUBE / 2, CUBE / 2, 0))
@@ -289,7 +312,7 @@ elif OPTION == 'block':
         # a third S, same size and lift as the side S's: Sound, and both ends of Solutions
         # squared to the face edges and lined up with the right-side S: letter right along +Y
         # the identical S as the sides
-        curve_slab('s_top', loop, lift_t + 4, 4, satin,
+        make_s('s_top', lift_t + 4,
                    Matrix.Translation((centre + Vector((0, 0, (lift_t - 4) / 2))) * U) @ Matrix.Rotation(math.radians(90), 4, 'Z'))
     elif TOP == 'bullseye':
         # ring + centre dot: a speaker from the front, a bullseye level from above
@@ -319,9 +342,9 @@ elif OPTION == 'block':
     box('body', (-CUBE, 0, -CUBE), (0, CUBE, 0), (top_g, left_g, right_g, satin), 8)
     lm = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))   # local x->X, y->Z, z->-Y
     rm = Matrix(((0, 0, 1, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, 1)))    # local x->Y, y->Z, z->+X
-    curve_slab('sl', loop, lift + 4, 4, satin,
+    make_s('sl', lift + 4,
                Matrix.Translation(Vector((-CUBE / 2, -(lift - 4) / 2, -CUBE / 2)) * U) @ lm)
-    curve_slab('sr', loop, lift + 4, 4, satin,
+    make_s('sr', lift + 4,
                Matrix.Translation(Vector(((lift - 4) / 2, CUBE / 2, -CUBE / 2)) * U) @ rm)
     # frame the cube plus whatever stands on top of it
     sc_ = math.cos(math.radians(24)); rise = 0.0
