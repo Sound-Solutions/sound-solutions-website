@@ -284,9 +284,9 @@ elif OPTION == 'block':
         curve_slab(name, loops, lift_t + 4, 4, satin, on_top((lift_t - 4) / 2))
     if TOP == 's':
         # a third S, same size and lift as the side S's: Sound, and both ends of Solutions
-        # squared to the face edges like the side S's: letter right along +X, letter up along +Y
+        # squared to the face edges and lined up with the right-side S: letter right along +Y
         curve_slab('s_top', loop, lift_t + 4, 4, satin,
-                   Matrix.Translation((centre + Vector((0, 0, (lift_t - 4) / 2))) * U))
+                   Matrix.Translation((centre + Vector((0, 0, (lift_t - 4) / 2))) * U) @ Matrix.Rotation(math.radians(90), 4, 'Z'))
     elif TOP == 'bullseye':
         # ring + centre dot: a speaker from the front, a bullseye level from above
         emboss('ring', [circle(190), circle(122, cw=True)])
