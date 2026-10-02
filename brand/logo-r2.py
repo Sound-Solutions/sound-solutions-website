@@ -9,6 +9,7 @@ from mathutils import Vector, Matrix
 argv = sys.argv[sys.argv.index('--') + 1:]
 OPTION, OUT = argv[0], argv[1]
 RES = int(argv[2]) if len(argv) > 2 else 1200
+TOP = argv[3] if len(argv) > 3 else 'none'      # block option: symbol on the top face
 U = 0.01                         # design unit -> metres
 K = math.sqrt(0.5)
 
@@ -121,14 +122,28 @@ def rounded_s(W, H, w, n=48):
     a, b = P + nrm * w / 2, P - nrm * w / 2
     return np.vstack([a, b[::-1]])
 
+def stroke(P, w):
+    """Outline of a polyline stroked to width w with square ends."""
+    P = np.asarray(P, float)
+    tang = np.gradient(P, axis=0); tang[0] = P[1] - P[0]; tang[-1] = P[-1] - P[-2]
+    tang /= np.linalg.norm(tang, axis=1)[:, None]
+    nrm = np.stack([-tang[:, 1], tang[:, 0]], 1)
+    return np.vstack([P + nrm * w / 2, (P - nrm * w / 2)[::-1]])
+
+def circle(r, n=96, cw=False):
+    a = np.linspace(0, 2 * math.pi, n, endpoint=False)
+    if cw: a = a[::-1]
+    return np.stack([r * np.cos(a), r * np.sin(a)], 1)
+
 def curve_slab(name, loop, depth, bevel, mat, matrix):
     """Extruded, bevelled slab from a 2D outline; front face on local z = +depth/2."""
     cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '2D'; cu.fill_mode = 'BOTH'
     cu.extrude = (depth / 2 - bevel) * U; cu.bevel_depth = bevel * U; cu.bevel_resolution = 4
     cu.offset = -bevel * U
-    sp = cu.splines.new('POLY'); sp.points.add(len(loop) - 1)
-    for p, (x, y) in zip(sp.points, loop): p.co = (x * U, y * U, 0, 1)
-    sp.use_cyclic_u = True
+    for lp in (loop if isinstance(loop, list) else [loop]):
+        sp = cu.splines.new('POLY'); sp.points.add(len(lp) - 1)
+        for p, (x, y) in zip(sp.points, lp): p.co = (x * U, y * U, 0, 1)
+        sp.use_cyclic_u = True
     ob = bpy.data.objects.new(name, cu); bpy.context.collection.objects.link(ob)
     ob.matrix_world = matrix; cu.materials.append(mat)
     return ob
@@ -248,9 +263,59 @@ elif OPTION == 'solved':
 elif OPTION == 'block':
     # one solid cube: option A's fine grille on top, option C (raised S on grille) on each side
     top_g = material('top', 'grille', 0.16, 0.17, 'z')
-    left_g = material('left', 'grille', 0.16, 0.30, 'y')
-    right_g = material('right', 'grille', 0.16, 0.30, 'x')
+    left_g = material('left', 'grille', 0.16, 0.17, 'y')
+    right_g = material('right', 'grille', 0.16, 0.17, 'x')
     satin = material('satin', 'satin')
+    # raised symbol on the top face, turned 45 deg so it reads upright from the camera.
+    # Each plays both meanings of "sound": audio, and level-headed / sound of mind.
+    centre = Vector((-CUBE / 2, CUBE / 2, 0))
+    def on_top(z):
+        return Matrix.Translation((centre + Vector((0, 0, z))) * U) @ Matrix.Rotation(math.radians(45), 4, 'Z')
+    def upright(off=0.0):
+        # standing on the top face, facing the camera: local x -> screen right, y -> up, z -> toward camera
+        m = Matrix(((K, 0, K, 0), (K, 0, -K, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+        return Matrix.Translation((centre + Vector((K, -K, 0)) * off) * U) @ m
+    extra = 0.0
+    if TOP == 'level':
+        # spirit-level vial: satin housing, green liquid, bubble dead centre
+        hw, hh, hr = 480.0, 170.0, 66.0
+        th_ = np.linspace(0, math.pi / 2, 16); house = []
+        for cx, cy, q in ((hw/2-hr, hh/2-hr, 0), (-hw/2+hr, hh/2-hr, 1), (-hw/2+hr, -hh/2+hr, 2), (hw/2-hr, -hh/2+hr, 3)):
+            house += [(cx + hr * math.cos(t + q * math.pi / 2), cy + hr * math.sin(t + q * math.pi / 2)) for t in th_]
+        curve_slab('housing', np.array(house), 44, 6, satin, on_top(18))
+        liquid = bpy.data.materials.new('liquid'); liquid.use_nodes = True
+        b = liquid.node_tree.nodes['Principled BSDF']
+        b.inputs['Base Color'].default_value = (0.25, 1.0, 0.08, 1)
+        b.inputs['Transmission Weight'].default_value = 0.6; b.inputs['Roughness'].default_value = 0.08
+        b.inputs['Emission Color'].default_value = (0.22, 1.0, 0.08, 1); b.inputs['Emission Strength'].default_value = 0.6
+        air = bpy.data.materials.new('air'); air.use_nodes = True
+        ab = air.node_tree.nodes['Principled BSDF']
+        ab.inputs['Base Color'].default_value = (0.75, 1.0, 0.65, 1); ab.inputs['Roughness'].default_value = 0.15
+        ab.inputs['Emission Color'].default_value = (0.8, 1.0, 0.7, 1); ab.inputs['Emission Strength'].default_value = 1.2
+        def ellipsoid(name, sx, sy, sz, z, mat):
+            bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=24, radius=1.0)
+            for v in bm.verts: v.co = Vector((v.co.x * sx, v.co.y * sy, v.co.z * sz)) * U
+            me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+            for pg in me.polygons: pg.use_smooth = True
+            ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
+            ob.matrix_world = on_top(z); me.materials.append(mat)
+        ellipsoid('vial', 190, 46, 30, 44, liquid)
+        ellipsoid('bubble', 48, 25, 10, 70, air)
+    elif TOP == 'fork':
+        # tuning fork standing on the cube like it sits on its resonator box
+        r_, w_, tl, sl = 72.0, 58.0, 190.0, 100.0
+        base = sl + r_ + w_ / 2
+        pts = [(-r_, base + tl)] + [(-r_, base)] + [(r_ * math.cos(a), base + r_ * math.sin(a)) for a in np.linspace(math.pi, 2 * math.pi, 40)[1:-1]] + [(r_, base), (r_, base + tl)]
+        curve_slab('tines', stroke(np.array(pts), w_), 46, 6, satin, upright())
+        curve_slab('stem', stroke(np.array([[0, -20.0], [0, sl + 10]]), w_ * 1.1), 46, 6, satin, upright())
+        extra = base + tl
+    elif TOP == 'balance':
+        # a beam resting dead level on a point
+        tri = np.array([[-95.0, -10.0], [95.0, -10.0], [0.0, 150.0]])
+        curve_slab('fulcrum', tri, 40, 5, satin, upright())
+        beam = np.array([[-240.0, 150.0], [240.0, 150.0], [240.0, 192.0], [-240.0, 192.0]])
+        curve_slab('beam', beam, 40, 5, satin, upright())
+        extra = 192.0
     box('body', (-CUBE, 0, -CUBE), (0, CUBE, 0), (top_g, left_g, right_g, satin), 8)
     sw, sh, st, lift = CUBE * 0.56, CUBE * 0.69, CUBE * 0.15, 24.0
     loop = rounded_s(sw, sh, st) - [sw / 2, sh / 2]
@@ -260,8 +325,10 @@ elif OPTION == 'block':
                Matrix.Translation(Vector((-CUBE / 2, -(lift - 4) / 2, -CUBE / 2)) * U) @ lm)
     curve_slab('sr', loop, lift + 4, 4, satin,
                Matrix.Translation(Vector(((lift - 4) / 2, CUBE / 2, -CUBE / 2)) * U) @ rm)
-    target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
-    studio(target, *iso_camera(target, 2 * CUBE * 1.16))
+    # frame the cube plus whatever stands on top of it
+    sc_ = math.cos(math.radians(24)); rise = 290.0   # fits the tallest top (the fork) on every version
+    target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2 + rise / 2 / sc_)) * U
+    studio(target, *iso_camera(target, 2 * CUBE * 1.16 + rise))
 
 elif OPTION == 'badge':
     # one rounded S, raised in satin black on a square of speaker grille
