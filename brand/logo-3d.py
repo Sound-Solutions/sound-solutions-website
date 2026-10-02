@@ -328,6 +328,60 @@ def fit(loops, bb, uoff):
         out.append(np.stack([u, v], 1))
     return out
 
+STROKE = 120.0                  # block S: bar and upright thickness
+
+def block_s(uoff):
+    """Square-cornered S filling the face under the plate: 3 bars, 2 uprights."""
+    Wd = CUBE; top = -(DEPTH + GAP); Ht = CUBE + top; w = STROKE; c = (Ht - 3 * w) / 2
+    y = [0, w, w + c, 2 * w + c, 2 * w + 2 * c, Ht]
+    pts = [(0, y[0]), (Wd, y[0]), (Wd, y[3]), (w, y[3]), (w, y[4]), (Wd, y[4]), (Wd, y[5]),
+           (0, y[5]), (0, y[2]), (Wd - w, y[2]), (Wd - w, y[1]), (0, y[1])]
+    return [np.array([(u + uoff, v - CUBE) for u, v in pts], dtype=float)]
+
+def s_rects():
+    """Block S as rectangles (u0, u1, v0, v1) in face coords, v measured up from the cube bottom."""
+    Wd = CUBE; Ht = CUBE - DEPTH - GAP; w = STROKE; c = (Ht - 3 * w) / 2
+    y = [0, w, w + c, 2 * w + c, 2 * w + 2 * c, Ht]
+    return [(0, Wd, y[0], y[1]), (Wd - w, Wd, y[1], y[2]), (0, Wd, y[2], y[3]),
+            (0, w, y[3], y[4]), (0, Wd, y[4], y[5])]
+
+def box_union(name, boxes, mat):
+    """One solid mesh from axis-aligned boxes: shared volume merges, nothing overlaps."""
+    ax = [sorted({b[2 * k] for b in boxes} | {b[2 * k + 1] for b in boxes}) for k in range(3)]
+    n = [len(a) - 1 for a in ax]
+    occ = np.zeros(n, bool)
+    for i in range(n[0]):
+        for j in range(n[1]):
+            for k in range(n[2]):
+                c = [(ax[0][i] + ax[0][i + 1]) / 2, (ax[1][j] + ax[1][j + 1]) / 2, (ax[2][k] + ax[2][k + 1]) / 2]
+                occ[i, j, k] = any(b[0] < c[0] < b[1] and b[2] < c[1] < b[3] and b[4] < c[2] < b[5] for b in boxes)
+    bm = bmesh.new(); vmap = {}
+    def V(i, j, k):
+        key = (i, j, k)
+        if key not in vmap: vmap[key] = bm.verts.new((ax[0][i] * U, ax[1][j] * U, ax[2][k] * U))
+        return vmap[key]
+    def filled(i, j, k):
+        return 0 <= i < n[0] and 0 <= j < n[1] and 0 <= k < n[2] and occ[i, j, k]
+    for i in range(n[0]):
+        for j in range(n[1]):
+            for k in range(n[2]):
+                if not occ[i, j, k]: continue
+                if not filled(i + 1, j, k): bm.faces.new([V(i+1, j, k), V(i+1, j+1, k), V(i+1, j+1, k+1), V(i+1, j, k+1)])
+                if not filled(i - 1, j, k): bm.faces.new([V(i, j, k), V(i, j, k+1), V(i, j+1, k+1), V(i, j+1, k)])
+                if not filled(i, j + 1, k): bm.faces.new([V(i, j+1, k), V(i, j+1, k+1), V(i+1, j+1, k+1), V(i+1, j+1, k)])
+                if not filled(i, j - 1, k): bm.faces.new([V(i, j, k), V(i+1, j, k), V(i+1, j, k+1), V(i, j, k+1)])
+                if not filled(i, j, k + 1): bm.faces.new([V(i, j, k+1), V(i+1, j, k+1), V(i+1, j+1, k+1), V(i, j+1, k+1)])
+                if not filled(i, j, k - 1): bm.faces.new([V(i, j, k), V(i, j+1, k), V(i+1, j+1, k), V(i+1, j, k)])
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(1), verts=bm.verts[:], edges=bm.edges[:])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
+    me.materials.append(mat)
+    bv = ob.modifiers.new('bevel', 'BEVEL'); bv.width = BEVEL * U; bv.segments = 4
+    bv.limit_method = 'ANGLE'; bv.harden_normals = True
+    for f in me.polygons: f.use_smooth = True
+    return ob
+
 def place(face, loops, mat, name):
     bx, by, bz = frames[face]
     half = DEPTH / 2
@@ -336,7 +390,7 @@ def place(face, loops, mat, name):
     else: origin = (-half, 0, 0)
     return face_object(name, loops, (bx, by, bz), origin, DEPTH, BEVEL, mat)
 
-DEPTH, BEVEL, CUBE, GAP = 30.0, 4.0, 574.5, 8.0
+DEPTH, BEVEL, CUBE, GAP = 30.0, 4.0, 574.5, 0.0
 tu, tv, tg, t_bb = top_grid()
 
 PLAN = {
@@ -357,9 +411,12 @@ TILE_RIGHT = {(0, 0): 'satin', (1, 0): 'rubber', (2, 0): 'satin', (0, 1): 'grill
 
 objs = []
 if cells is None:
-    objs.append(place('top', pieces(tg, tu, tv, t_bb)[0], MATS[top_mat], 'top'))
-    objs.append(place('left', fit(pieces(LG, LU, LV, L_BB)[0], L_BB, -CUBE), MATS[side_mat], 'left'))
-    objs.append(place('right', fit(pieces(RG, RU, RV, R_BB)[0], R_BB, 0.0), MATS[side_mat], 'right'))
+    objs.append(box_union('top', [(-CUBE, 0, 0, CUBE, -DEPTH, 0)], MATS[top_mat]))
+    sides = []
+    for u0, u1, v0, v1 in s_rects():
+        sides.append((u0 - CUBE, u1 - CUBE, 0, DEPTH, v0 - CUBE, v1 - CUBE))   # left face, y in [0, t]
+        sides.append((-DEPTH, 0, u0, u1, v0 - CUBE, v1 - CUBE))                # right face, x in [-t, 0]
+    objs.append(box_union('sides', sides, MATS[side_mat]))
 else:
     for face, (g, us, vs, bb), table in (('top', (tg, tu, tv, t_bb), TILE_TOP),
                                          ('left', (LG, LU, LV, L_BB), TILE_LEFT),
