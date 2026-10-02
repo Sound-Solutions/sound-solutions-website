@@ -170,11 +170,12 @@ def pieces(grid, us, vs, bb, cells=None, groove=7.0):
     return out
 
 def top_grid(cells=None, groove=7.0):
-    """Top face as a square in (X, Y): X in [-A, 0], Y in [0, A]."""
-    us = np.arange(-A - 20, 20, 0.5); vs = np.arange(-20, A + 20, 0.5)
+    """Top plate: covers the whole top, flush with the S panels' outer faces."""
+    lo = 0.0
+    us = np.arange(-CUBE - 20, 20, 0.5); vs = np.arange(-20, CUBE + 20, 0.5)
     UU, VV = np.meshgrid(us, vs)
-    g = ((UU > -A) & (UU < 0) & (VV > 0) & (VV < A)).astype(np.float32)
-    return us, vs, g, (-A, 0.0, 0.0, A)
+    g = ((UU > -CUBE) & (UU < -lo) & (VV > lo) & (VV < CUBE)).astype(np.float32)
+    return us, vs, g, (-CUBE, -lo, lo, CUBE)
 
 # ---------------------------------------------------------------- materials
 def node_tree(mat):
@@ -269,9 +270,10 @@ def make_material(name, kind, tint=0.026):
         holes = hm.outputs[0]
         bsdf.inputs['Metallic'].default_value = 1.0
         mix = add(nodes, 'ShaderNodeMix', data_type='RGBA')
-        mix.inputs['A'].default_value = (0.11, 0.11, 0.11, 1); mix.inputs['B'].default_value = (0.0, 0.0, 0.0, 1)
+        g_ = 0.32 if kind == 'grille' else 0.11
+        mix.inputs['A'].default_value = (g_, g_, g_, 1); mix.inputs['B'].default_value = (0.0, 0.0, 0.0, 1)
         links.new(holes, mix.inputs['Factor']); links.new(mix.outputs['Result'], bsdf.inputs['Base Color'])
-        rr = add(nodes, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.3; rr.inputs['To Max'].default_value = 1.0
+        rr = add(nodes, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.38; rr.inputs['To Max'].default_value = 1.0
         links.new(holes, rr.inputs['Value']); links.new(rr.outputs['Result'], bsdf.inputs['Roughness'])
         inv = add(nodes, 'ShaderNodeMath', operation='SUBTRACT'); inv.inputs[0].default_value = 1.0
         links.new(holes, inv.inputs[1])
@@ -285,7 +287,7 @@ MATS = {k: make_material(k, k) for k in ('satin', 'gloss', 'brushed', 'rubber', 
 def face_object(name, loops, basis, origin, depth, bevel, mat):
     cu = bpy.data.curves.new(name, 'CURVE')
     cu.dimensions = '2D'; cu.fill_mode = 'BOTH'
-    cu.extrude = depth / 2 * U
+    cu.extrude = (depth / 2 - bevel) * U   # bevel adds its own depth on both caps
     cu.bevel_depth = bevel * U; cu.bevel_resolution = 4
     cu.offset = -bevel * U if hasattr(cu, 'offset') else 0
     for l in loops:
@@ -311,17 +313,30 @@ def plane_frames():
         'right': ((0, 1, 0), (0, 0, 1), (1, 0, 0)),
     }
 
-DEPTH, BEVEL = 36.0, 5.0
+DEPTH, BEVEL = 30.0, 4.0
+CUBE = 574.5                    # cube edge; the S panels fill each side face edge to edge
+GAP = 8.0                       # seam between the top plate and the S panels
 frames = plane_frames()
+
+def fit(loops, bb, uoff):
+    # stretch the S so its outer edges land exactly on the cube face edges
+    out = []
+    for l in loops:
+        u = (l[:, 0] - bb[0]) / (bb[1] - bb[0]) * CUBE + uoff
+        top = -(DEPTH + GAP)       # S panels hang below the plate, seam GAP under it
+        v = (l[:, 1] - bb[2]) / (bb[3] - bb[2]) * (CUBE + top) - CUBE
+        out.append(np.stack([u, v], 1))
+    return out
 
 def place(face, loops, mat, name):
     bx, by, bz = frames[face]
-    inward = -DEPTH / 2 + BEVEL * 0.0
-    if face == 'top': origin = (0, 0, inward)
-    elif face == 'left': origin = (0, YL - inward, 0)
-    else: origin = (XR + inward, 0, 0)
+    half = DEPTH / 2
+    if face == 'top': origin = (0, 0, -half)
+    elif face == 'left': origin = (0, half, 0)
+    else: origin = (-half, 0, 0)
     return face_object(name, loops, (bx, by, bz), origin, DEPTH, BEVEL, mat)
 
+DEPTH, BEVEL, CUBE, GAP = 30.0, 4.0, 574.5, 8.0
 tu, tv, tg, t_bb = top_grid()
 
 PLAN = {
@@ -343,13 +358,14 @@ TILE_RIGHT = {(0, 0): 'satin', (1, 0): 'rubber', (2, 0): 'satin', (0, 1): 'grill
 objs = []
 if cells is None:
     objs.append(place('top', pieces(tg, tu, tv, t_bb)[0], MATS[top_mat], 'top'))
-    objs.append(place('left', pieces(LG, LU, LV, L_BB)[0], MATS[side_mat], 'left'))
-    objs.append(place('right', pieces(RG, RU, RV, R_BB)[0], MATS[side_mat], 'right'))
+    objs.append(place('left', fit(pieces(LG, LU, LV, L_BB)[0], L_BB, -CUBE), MATS[side_mat], 'left'))
+    objs.append(place('right', fit(pieces(RG, RU, RV, R_BB)[0], R_BB, 0.0), MATS[side_mat], 'right'))
 else:
     for face, (g, us, vs, bb), table in (('top', (tg, tu, tv, t_bb), TILE_TOP),
                                          ('left', (LG, LU, LV, L_BB), TILE_LEFT),
                                          ('right', (RG, RU, RV, R_BB), TILE_RIGHT)):
         for (a_, b_), ls in pieces(g, us, vs, bb, cells):
+            if face != 'top': ls = fit(ls, bb, -CUBE if face == 'left' else 0.0)
             objs.append(place(face, ls, MATS[table[(a_, b_)]], f'{face}_{a_}{b_}'))
 
 # group under an empty so the hero view can tilt the whole mark
@@ -357,9 +373,9 @@ root = bpy.data.objects.new('mark', None); bpy.context.collection.objects.link(r
 for o in objs: o.parent = root
 
 # ---------------------------------------------------------------- camera + light
-r = Vector((K, K, 0)); cdir = Vector((K * C, -K * C, S)); up = Vector((-K * S, K * S, C))
-ctr_sx, ctr_dn = 463.5 - CX, 532.0 - CY
-target = (r * ctr_sx - up * ctr_dn) * U
+SC = 1 / math.sqrt(3); CC = math.sqrt(1 - SC * SC)   # true isometric
+r = Vector((K, K, 0)); cdir = Vector((K * CC, -K * CC, SC)); up = Vector((-K * SC, K * SC, CC))
+target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
 
 if VIEW == 'hero':
     # tilt like the reference: turned and rolled, floating
@@ -372,13 +388,13 @@ if VIEW == 'hero':
 cam_data = bpy.data.cameras.new('cam')
 cam = bpy.data.objects.new('cam', cam_data); bpy.context.collection.objects.link(cam)
 cam.location = target + cdir * 60
-cam.rotation_euler = (math.radians(90) - math.asin(S), 0, math.radians(45))
+cam.rotation_euler = (math.radians(90) - math.asin(SC), 0, math.radians(45))
 if VIEW == 'hero':
     cam_data.type = 'PERSP'; cam_data.lens = 85
     cam.location = target + cdir * 64
     cam_data.clip_end = 500
 else:
-    cam_data.type = 'ORTHO'; cam_data.ortho_scale = 995 * 1.1 * U
+    cam_data.type = 'ORTHO'; cam_data.ortho_scale = 2 * CUBE * 1.12 * U
     cam_data.clip_end = 500
 bpy.context.scene.camera = cam
 
@@ -415,7 +431,7 @@ except Exception as e:
 sc.cycles.samples = 160
 sc.cycles.use_denoising = True
 sc.render.film_transparent = True
-aspect = 1150 / 1000
+aspect = 1.0
 sc.render.resolution_x = RES; sc.render.resolution_y = int(RES * aspect)
 sc.render.resolution_percentage = 100
 sc.view_settings.view_transform = 'AgX'
@@ -423,5 +439,11 @@ try: sc.view_settings.look = 'AgX - Medium High Contrast'
 except Exception: pass
 sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
 sc.render.filepath = OUT
+dg = bpy.context.evaluated_depsgraph_get()
+for o in objs:
+    ev = o.evaluated_get(dg); me = ev.to_mesh()
+    vs_ = np.array([(o.matrix_world @ v.co)[:] for v in me.vertices]) / U
+    print('BOUNDS', o.name, np.round(vs_.min(0), 1), np.round(vs_.max(0), 1))
+    ev.to_mesh_clear()
 bpy.ops.render.render(write_still=True)
 print('WROTE', OUT)
