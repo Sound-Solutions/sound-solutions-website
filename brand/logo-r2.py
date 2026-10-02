@@ -53,7 +53,11 @@ def material(name, kind, grey=0.16, pitch=0.17, plane='z'):
     out = add(nodes, 'ShaderNodeOutputMaterial'); bsdf = add(nodes, 'ShaderNodeBsdfPrincipled')
     links.new(bsdf.outputs[0], out.inputs['Surface'])
     tc = add(nodes, 'ShaderNodeTexCoord'); coord = tc.outputs['Object']
-    if kind == 'matte':          # flat black that stays darker than the grille under the key light
+    if kind == 'gloss':          # shiny black: reflects the dark room, catches the lights on its edges
+        bsdf.inputs['Base Color'].default_value = (0.008, 0.008, 0.008, 1)
+        bsdf.inputs['Roughness'].default_value = 0.14
+        bsdf.inputs['Coat Weight'].default_value = 1.0; bsdf.inputs['Coat Roughness'].default_value = 0.04
+    elif kind == 'matte':          # flat black that stays darker than the grille under the key light
         bsdf.inputs['Base Color'].default_value = (0.006, 0.006, 0.006, 1)
         bsdf.inputs['Roughness'].default_value = 0.75
         bsdf.inputs['Specular IOR Level'].default_value = 0.2
@@ -222,8 +226,8 @@ def light(name, target, pos, size, power, size_y=None):
     lo.location = pos
     lo.rotation_euler = (target - pos).normalized().to_track_quat('-Z', 'Y').to_euler()
 
-def studio(target, r, up, cdir):
-    light('key', target, target + (-r * 13 + up * 8 + cdir * 6), 9, 8000, 5)
+def studio(target, r, up, cdir, key_up=8.0):
+    light('key', target, target + (-r * 13 + up * key_up + cdir * 6), 9, 8000, 5)
     light('rim', target, target + (r * 10 + up * 7 - cdir * 4), 4, 4000, 10)
     light('kick', target, target + (r * 9 - up * 6 + cdir * 6), 6, 1400)
     light('top', target, target + (up * 16 + cdir * 2), 12, 3500, 3)
@@ -362,7 +366,7 @@ elif OPTION == 'tiles':
     top_g = material('top', 'grille', 0.22, 0.17, 'z')
     left_g = material('left', 'grille', 0.22, 0.17, 'y')
     right_g = material('right', 'grille', 0.22, 0.17, 'x')
-    dark = material('dark', 'matte')
+    dark = material('dark', 'gloss')
     S5 = ['#####', '#....', '#####', '....#', '#####']      # row 0 = top of the letter
     lit = lambda r, c: S5[r][c] == '#'
     n_, g = 5, 8.0; s_ = CUBE / n_
@@ -378,7 +382,7 @@ elif OPTION == 'tiles':
                 right_m = dark if lit(n_ - 1 - k, j) else right_g      # right: letter right +Y, up +Z
                 box(f'c{i}{j}{k}', lo, hi, (top_m, left_m, right_m, dark), 8, 4)
     target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
-    studio(target, *iso_camera(target, 2 * CUBE * 1.16, elev=30))
+    studio(target, *iso_camera(target, 2 * CUBE * 1.16, elev=30), key_up=1.5)   # key lower so the left side reads
 
 elif OPTION == 'badge':
     # one rounded S, raised in satin black on a square of speaker grille
