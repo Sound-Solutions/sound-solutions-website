@@ -270,7 +270,7 @@ def make_material(name, kind, tint=0.026):
         holes = hm.outputs[0]
         bsdf.inputs['Metallic'].default_value = 1.0
         mix = add(nodes, 'ShaderNodeMix', data_type='RGBA')
-        g_ = 0.32 if kind == 'grille' else 0.11
+        g_ = 0.16 if kind == 'grille' else 0.11
         mix.inputs['A'].default_value = (g_, g_, g_, 1); mix.inputs['B'].default_value = (0.0, 0.0, 0.0, 1)
         links.new(holes, mix.inputs['Factor']); links.new(mix.outputs['Result'], bsdf.inputs['Base Color'])
         rr = add(nodes, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.38; rr.inputs['To Max'].default_value = 1.0
@@ -451,7 +451,7 @@ root = bpy.data.objects.new('mark', None); bpy.context.collection.objects.link(r
 for o in objs: o.parent = root
 
 # ---------------------------------------------------------------- camera + light
-SC = 1 / math.sqrt(3); CC = math.sqrt(1 - SC * SC)   # true isometric
+SC = math.sin(math.radians(24)); CC = math.sqrt(1 - SC * SC)   # camera 24 deg above the cube
 r = Vector((K, K, 0)); cdir = Vector((K * CC, -K * CC, SC)); up = Vector((-K * SC, K * SC, CC))
 target = Vector((-CUBE / 2, CUBE / 2, -CUBE / 2)) * U
 
