@@ -431,12 +431,11 @@ if cells is None:
     rects = s_rects(); t, e = DEPTH, 20.0
     left = [(u0 - CUBE, u1 - CUBE, 0, t, v0 - CUBE, v1 - CUBE) for u0, u1, v0, v1 in rects]
     right = [(-t, 0, u0, u1, v0 - CUBE, v1 - CUBE) for u0, u1, v0, v1 in rects]
-    # 45-degree miter on the front edge, only where both S's reach the corner (the three bars);
-    # where only one does, it keeps the full corner, so nothing overlaps and nothing is missing
-    bars = [(r[2] - CUBE, r[3] - CUBE) for r in rects if r[0] == 0 and r[1] == CUBE]
-    zpad = lambda z0, z1: (z0 - e if z0 <= -CUBE else z0, z1 + e if z1 >= -t - GAP else z1)
-    lcut = [wedge('lcut', [(-t - e, t + e), (e, t + e), (e, -e)], *zpad(*b)) for b in bars]
-    rcut = [wedge('rcut', [(-t - e, t + e), (-t - e, -e), (e, -e)], *zpad(*b)) for b in bars]
+    # 45-degree miter down the whole front edge: each S stays entirely on its own face,
+    # two separate pieces that touch only where both reach the corner
+    z0, z1 = -CUBE - e, -t + e
+    lcut = [wedge('lcut', [(-t - e, t + e), (e, t + e), (e, -e)], z0, z1)]
+    rcut = [wedge('rcut', [(-t - e, t + e), (-t - e, -e), (e, -e)], z0, z1)]
     objs.append(box_union('left', left, MATS[side_mat], lcut))
     objs.append(box_union('right', right, MATS[side_mat], rcut))
 else:
